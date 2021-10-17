@@ -280,7 +280,7 @@ func sendRequests() (responses chan ResponseInfo, errors chan error) {
 					// Add content-type to POST requests (some applications require this to properly process POST requests)
 					// TODO: Find any bugs around other request types
 					if !contentType && t.Method == "POST" {
-						req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+						req.Header.Add("Content-Type", "application/json")
 
 					}
 
@@ -306,7 +306,7 @@ func sendRequests() (responses chan ResponseInfo, errors chan error) {
 						client = http.Client{
 							Jar:       t.CookieJar,
 							Transport: &transport,
-							Timeout:   120 * time.Second,
+							Timeout:   300 * time.Second,
 						}
 					} else {
 						client = http.Client{
@@ -329,9 +329,7 @@ func sendRequests() (responses chan ResponseInfo, errors chan error) {
 							if rErr, ok2 := uErr.Err.(*RedirectError); ok2 {
 								// Redirect error
 								// VERBOSE
-								if configuration.Verbose {
-									log.Printf("[VERBOSE] %v\n", rErr)
-								}
+								log.Printf("[VERBOSE] %v\n", rErr)
 								// Add the response to the responses channel, because it is still valid
 								responses <- ResponseInfo{Response: resp, Target: t}
 							} else {
@@ -374,10 +372,8 @@ func compareResponses(responses chan ResponseInfo) (uniqueResponses []UniqueResp
 	errors = make(chan error, len(responses))
 
 	// VERBOSE
-	if configuration.Verbose {
-		log.Printf("[VERBOSE] Unique response comparison begin.\n")
-	}
-
+	log.Printf("[VERBOSE] Unique response comparison begin.\n")
+	
 	// Compare the responses, one at a time
 	for respInfo := range responses {
 		// Read the response body
